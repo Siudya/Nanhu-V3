@@ -84,6 +84,7 @@ class SimTop(implicit p: Parameters) extends Module {
     val logCtrl = new LogCtrlIO
     val perfInfo = new PerfInfoIO
     val uart = new UARTIO
+    val simFinal = Input(Bool())
   })
 
   simMMIO.io.uart <> io.uart

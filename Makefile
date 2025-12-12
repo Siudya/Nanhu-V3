@@ -84,7 +84,7 @@ endif
 .DEFAULT_GOAL = verilog
 
 help:
-	mill -i XiangShan.test.runMain $(SIMTOP) --xs-help
+	mill -i test.runMain $(SIMTOP) --xs-help
 
 update-vmem-path:
 	@sed -i 's|parameter RomCtrlBootRomInitFile = ".*"|parameter RomCtrlBootRomInitFile = "$(ROT_VMEM_DIR)"|' \
@@ -101,7 +101,7 @@ endif
 
 $(TOP_V): $(SCALA_FILE) update-vmem-path
 	mkdir -p $(@D)
-	mill -i XiangShan.runMain $(FPGATOP) -td $(@D) \
+	mill -i runMain $(FPGATOP) -td $(@D) \
 		--config $(CONFIG) --full-stacktrace --num-cores $(NUM_CORES) \
 		$(RELEASE_ARGS) --target systemverilog --split-verilog
 	@python3 scripts/postcompile/postcompile.py $(POST_COMP_OPTS)
@@ -122,7 +122,7 @@ endif
 	mkdir -p $(@D)
 	@echo "\n[mill] Generating Verilog files..." > $(@D)/time.log
 	@date -R | tee -a $(@D)/time.log
-	time -o $(@D)/time.log mill -i XiangShan.test.runMain $(SIMTOP) -td $(@D) \
+	time -o $(@D)/time.log mill -i test.runMain $(SIMTOP) -td $(@D) \
 		--config $(CONFIG) --full-stacktrace --num-cores $(NUM_CORES) \
 		$(SIM_ARGS) --target systemverilog | tee build/make.log
 ifeq ($(VCS), 1)
@@ -155,8 +155,8 @@ bump:
 	git submodule foreach "git fetch origin&&git checkout master&&git reset --hard origin/master"
 
 comp:
-	mill -i XiangShan.compile
-	mill -i XiangShan.test.compile
+	mill -i compile
+	mill -i test.compile
 
 bsp:
 	mill -i mill.bsp.BSP/install

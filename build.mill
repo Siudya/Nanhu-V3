@@ -1,0 +1,80 @@
+package build
+import mill.*
+import scalalib.*
+
+def defaultScalaVersion = "2.13.16"
+def depVersion = Map(
+  "scalatest"      -> mvn"org.scalatest::scalatest:3.2.7",
+  "chisel"         -> mvn"org.chipsalliance::chisel:6.7.0",
+  "chisel-plugin"  -> mvn"org.chipsalliance:::chisel-plugin:6.7.0",
+  "llvm-firtool"   -> mvn"org.chipsalliance:llvm-firtool:1.62.1",
+  "json4s-jackson" -> mvn"org.json4s::json4s-jackson:4.0.7",
+  "mainargs"       -> mvn"com.lihaoyi::mainargs:0.5.0",
+  "sourcecode"     -> mvn"com.lihaoyi::sourcecode:0.4.4"
+)
+
+trait CommonModule extends ScalaModule {
+  override def scalaVersion = defaultScalaVersion
+  override def scalacPluginMvnDeps = Seq(depVersion("chisel-plugin"))
+  override def scalacOptions = super.scalacOptions() ++
+    Seq("-language:reflectiveCalls", "-Ymacro-annotations", "-Ytasty-reader")
+  override def mvnDeps = super.mvnDeps() ++ Seq(
+    depVersion("chisel"),
+    depVersion("llvm-firtool")
+  )
+}
+
+object `package` extends SbtModule with CommonModule {
+  override def moduleDeps = Seq(
+    `rocket-chip`,
+    `xs-utils`,
+    fudian,
+    huancun,
+    coupledL2,
+    coupledL2.AXItoTL,
+    difftest
+  )
+
+  object test extends SbtTests  {
+    override def mvnDeps = super.mvnDeps() ++ Seq(depVersion("scalatest"))
+    def testFramework = "org.scalatest.tools.Framework"
+  }
+
+  object `rocket-chip` extends CommonModule {
+    override def moduleDeps = Seq(hardfloat.hardfloat, cde.cde, macros)
+    override def mvnDeps = super.mvnDeps() ++ Seq(
+      depVersion("json4s-jackson"),
+      depVersion("mainargs"),
+      depVersion("sourcecode")
+    )
+    object macros extends CommonModule {}
+
+    object cde extends CommonModule {
+			object cde extends CommonModule {}
+		}
+
+    object hardfloat extends CommonModule {
+			object hardfloat extends CommonModule {}
+		}
+  }
+
+  object `xs-utils` extends SbtModule with CommonModule {
+    override def moduleDeps = super.moduleDeps ++ Seq(`rocket-chip`)
+  }
+
+  object difftest extends SbtModule with CommonModule
+
+  object fudian extends SbtModule with CommonModule
+
+  object huancun extends SbtModule with CommonModule {
+    override def moduleDeps = super.moduleDeps ++ Seq(`xs-utils`)
+  }
+
+  object coupledL2 extends SbtModule with CommonModule {
+		override def moduleDeps = super.moduleDeps ++ Seq(`xs-utils`, huancun)
+
+		object AXItoTL extends CommonModule with SbtModule {
+			override def moduleDeps = super.moduleDeps ++ Seq(`xs-utils`)
+		}
+	}
+}
